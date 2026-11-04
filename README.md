@@ -52,23 +52,25 @@ Malignant is treated as the positive class. **Sensitivity** is malignant recall,
 | Linear SVM (64/16/20 split)       | 364              | 93.86%         | 88.10%         | 97.22%         | 0.982         |
 | PyTorch MLP (5 seeds, mean ± std) | 364              | 93.33% ± 0.48% | 90.48% ± 0.00% | 95.00% ± 0.76% | 0.979 ± 0.002 |
 
-All three models use the same 2 PCA components. Test sets contain 114 samples (42 malignant, 72 benign), so one sample is worth about 0.9 percentage points of accuracy.
+All three models use the same PCA setup (2 components). The fitted components differ slightly between the 455- and 364-sample runs. Test sets contain 114 samples (42 malignant, 72 benign), so one sample is worth about 0.9 percentage points of accuracy.
+
+**Sources:** The 80:20 SVM row comes from `[V1 notebook filename]`. The 364-sample SVM row comes from `[notebook/cell that produced it]`, and the MLP row from `tumor_expression_classifierV2_pytorch.ipynb`. [Both 364-sample rows use the same split code (`random_state=24`) and therefore the same 114-sample test set.]
 
 ### Comparison
 
-The PyTorch MLP does not outperform the linear SVM on this dataset. On the same 364-sample training split, the two models land within one or two test samples of each other, which is within noise at this test-set size. The SVM catches slightly fewer malignant tumors (37 vs. 38 of 42) but makes fewer false alarms (2 vs. 3 to 4 of 72). The original SVM's higher 95.61% reflects training on 455 samples instead of 364, plus a difference of about 2 test samples.
+The PyTorch MLP does not outperform the linear SVM on this dataset. On the same 364-sample training split, the two models land within one or two test samples of each other, which is within noise at this test-set size. The SVM catches slightly fewer malignant tumors (37 vs. 38 of 42) but makes fewer false alarms (2 vs. 3 to 4 of 72). The original SVM's higher 95.61% may reflect training on more samples (455 vs. 364) [and a different test set], a gap of about 2 test samples.
 
-This is the expected result for a small, well-separated tabular dataset: the classes are close to linearly separable in the PCA space, so a nonlinear model has little to gain. The MLP's seed-to-seed variation is also tiny (accuracy varies by at most one test sample), but that only reflects random initialization. It does not capture variation from the choice of train/test split.
+This is the expected result for a small tabular dataset where the classes are largely separable in the PCA space: a nonlinear model has little to gain. The MLP's seed-to-seed variation is tiny (accuracy varies by at most one test sample), but it reflects only random initialization, not the choice of train/test split.
 
 ### Clinical Valuation Analysis
 
-Through a medical oncology lens, minimizing False Negatives (missing an active cancer case) is significantly more vital than avoiding False Positives. The original SVM pipeline reaches a **Malignant Recall (sensitivity) of 0.93**, catching 39 of 42 malignant cases, with a **Malignant Precision of 0.95**. Its **Specificity of 97.22%** shows it identifies benign tissue correctly, limiting unneeded patient anxiety or invasive follow-up procedures. The PyTorch MLP detects 38 of 42 malignant tumors (90.48%), so neither model should be treated as screening-ready: with a test set of 114 samples, the sensitivity estimates carry wide uncertainty.
+Through a medical oncology lens, minimizing false negatives (missing an active cancer case) matters more than avoiding false positives. The original (80:20) SVM reaches a **sensitivity of 0.93**, catching 39 of 42 malignant cases, with a **malignant precision of 0.95** and a **specificity of 97.22%**, which limits unnecessary follow-up procedures. The PyTorch MLP detects 38 of 42 malignant tumors (90.48%). Neither model should be treated as screening-ready: with 114 test samples, the sensitivity estimates carry wide uncertainty.
 
 ## Limitations
 
-- Results come from a single train/test split of 569 samples. Cross-validation would give a more reliable estimate.
+- Each model was evaluated on a single train/test split of 569 samples, and the SVM rows use two different splits. Cross-validation would give a more reliable estimate.
 - Only 2 principal components are used, retaining about 62% of the total variance. More components may improve sensitivity.
-- The decision threshold is fixed at probability 0.5. Lowering it would trade specificity for sensitivity, which may be preferable in a screening setting.
+- Default decision thresholds are used (0.5 probability for the MLP, 0 margin for the SVM). Lowering them would trade specificity for sensitivity, which may be preferable in a screening setting.
 
 ## Installation & Reproduction
 
