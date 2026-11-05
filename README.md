@@ -1,4 +1,4 @@
-# Cancer Tumor Classification & Dimensionality Reduction
+# Breast Tumor Malignancy Classification & Dimensionality Reduction
 
 ## Project Overview
 
